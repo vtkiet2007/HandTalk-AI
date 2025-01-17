@@ -1,29 +1,112 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ESP32-CAM AI</title>
+  <title>ỨNG DỤNG CÔNG NGHỆ MẠNG TÍCH CHẬP CHẾ TẠO THIẾT BỊ HỖ TRỢ CHO NGƯỜI KHIẾM THANH VÀ KHIẾM THÍNH 
+    TRONG GIAO TIẾP </title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    h1 {
+      color: #007bff;
+      text-align: center;
+      margin: 20px;
+    }
+    #video {
+      display: block;
+      margin: 20px auto;
+      width: 100%;
+      max-width: 720px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+    }
+    .btn-container {
+      text-align: center;
+      margin: 20px;
+    }
+    .btn {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+    #result {
+      text-align: center;
+      font-size: 20px;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
-  <h1>ESP32-CAM Video Stream</h1>
-  <img src="http://127.0.0.1:5000/stream" width="640" alt="ESP32-CAM Stream">
 
-  <h2>AI Prediction</h2>
-  <p>Result: <span id="result">Waiting...</span></p>
+  <h1>ESP32-CAM Live Stream với Nhận diện ký hiệu tay</h1>
+  <img id="video" src="http://<IP_CUA_ESP32>/stream" alt="ESP32-CAM Stream" />
+
+  <div class="btn-container">
+    <button class="btn btn-primary" onclick="startRecognition()">Bắt đầu nhận diện ký hiệu tay</button>
+    <button class="btn btn-secondary" onclick="stopRecognition()">Dừng nhận diện</button>
+  </div>
+
+  <p id="result">Kết quả sẽ hiển thị tại đây...</p>
 
   <script>
-    async function fetchPrediction() {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/predict', { method: 'POST' });
-        const data = await response.json();
-        document.getElementById('result').textContent = data.action;
-      } catch (error) {
-        console.error('Error fetching prediction:', error);
-      }
+    let intervalId;
+
+    async function startRecognition() {
+        const videoElement = document.getElementById('video');
+        const resultElement = document.getElementById('result');
+
+        intervalId = setInterval(async () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = videoElement.width;
+                canvas.height = videoElement.height;
+                const context = canvas.getContext('2d');
+                context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+                const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg'));
+                const formData = new FormData();
+                formData.append('file', blob, 'frame.jpg');
+
+                const response = await fetch('http://127.0.0.1:5000/predict', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+                if (data.prediction) {
+                    resultElement.innerText = `Kết quả: ${data.prediction}`;
+                } else {
+                    resultElement.innerText = 'Không phát hiện hành động';
+                }
+
+            } catch (error) {
+                console.error('Lỗi:', error);
+                resultElement.innerText = 'Có lỗi xảy ra!';
+            }
+        }, 1000);
     }
 
-    setInterval(fetchPrediction, 3000); // Call every 3 seconds
+    function stopRecognition() {
+        clearInterval(intervalId);
+    }
   </script>
+
 </body>
 </html>
