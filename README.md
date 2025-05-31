@@ -149,10 +149,10 @@ python optimized_server.py
 - Connect to Text-to-Speech for live communication aid
 
 ---
-
 ## 🙏 Special Thanks
 
-Special thanks to **Mr. Phương** for valuable guidance and support.
+- Special thanks to **Mr. Phương** for valuable guidance and support.
+- Many thanks to [MonzerDev/Real-Time-Sign-Language-Recognition](https://github.com/MonzerDev/Real-Time-Sign-Language-Recognition) for inspiring ideas and technical references that helped shape this project.
 
 ---
 
