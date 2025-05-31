@@ -1,56 +1,171 @@
 # HandTalk-AI
 
-HandTalk-AI is an innovative project bridging the gap between hand gesture recognition and real-time communication, powered by advanced Convolutional Neural Networks (CNN) and ESP32-CAM technology.
+HandTalk-AI is a real-time hand gesture recognition system designed to empower communication for the deaf or mute community. By combining ESP32-CAM, artificial intelligence (AI), and a modern web application, HandTalk-AI is a practical, socially impactful project at the intersection of hardware and AI for good.
 
-## 🚀 About the Project
+---
 
-HandTalk-AI is designed to interpret hand gestures using computer vision and deep learning, enabling seamless translation of sign language or gesture-based commands into meaningful digital outputs. This project leverages affordable hardware (ESP32-CAM) and state-of-the-art neural networks to make gesture recognition accessible to everyone.
+## 🌟 Project Highlights
 
-## 🧑‍🔬 Author
+- **For the Community:** Designed to assist people with hearing or speech impairments.
+- **Accessible Hardware:** Uses affordable and widely available ESP32-CAM modules.
+- **Cutting-Edge AI:** Employs Convolutional Neural Networks (CNN) and LSTM via TensorFlow and Mediapipe.
+- **Web Interface:** Real-time gesture visualization and interaction in your browser.
+- **Easy to Set Up:** Step-by-step guide from firmware upload to server and web UI.
 
-- **Name:** Kiệt Võ Tuấn
-- **Profession:** Researcher
-- **Expertise:** Web Development, Convolutional Neural Networks (Mạng thần kinh tích chập), ESP32-CAM applications
-- **LinkedIn:** [Kiệt Võ Tuấn](https://www.linkedin.com/in/ki%E1%BB%87t-v%C3%B5-tu%E1%BA%A5n-ab2001346/)
-- **GitHub:** [vtkiet2007](https://github.com/vtkiet2007)
+---
+
+## 👨‍💻 Author
+
+- **Kiệt Võ Tuấn**  
+  Researcher | Web Development, Mạng thần kinh tích chập (CNN), ESP32-CAM  
+  [LinkedIn](https://www.linkedin.com/in/ki%E1%BB%87t-v%C3%B5-tu%E1%BA%A5n-ab2001346/) • [GitHub](https://github.com/vtkiet2007)
+
+---
 
 ## ✨ Features
 
-- Real-time hand gesture recognition via ESP32-CAM
-- Deep learning inference using Convolutional Neural Networks (CNN)
-- Web-based dashboard for monitoring and interacting with gesture data
-- Modular and extensible codebase for rapid experimentation
+- Real-time hand gesture recognition with ESP32-CAM streaming
+- AI-based gesture inference (Mediapipe + LSTM)
+- Web-based dashboard with live results
+- Modular: easily extend with new gestures, models, or interface
 
-## 🛠️ Technologies
+---
 
-- ESP32-CAM for edge image capture and streaming
-- Python (for training and inference)
-- TensorFlow/Keras for CNN modeling
-- Web technologies: HTML, CSS, JavaScript for UI/UX
-- REST APIs for communication between hardware and web dashboard
+# Gesture Recognition System with ESP32-CAM – Full Setup & Test Guide
 
-## 📂 Example Use Cases
+## 1. What You Need
 
-- Sign language interpretation for accessibility
-- Gesture-based controls for IoT and smart devices
-- Educational tools for learning hand gestures and sign language
+**Hardware:**
+- 1x [ESP32-CAM Module](https://docs.ai-thinker.com/en/esp32-cam)
+- 1x FTDI USB-to-Serial Adapter (3.3V)
+- Jumper wires, Breadboard
+- USB cable
 
-## 🚦 Getting Started
+**Software:**
+- Arduino IDE
+- Python 3.8+
+- Python libraries: Flask, Mediapipe, TensorFlow, OpenCV
+- Your trained model file: `action.h5`
 
-1. **Hardware Setup:** Connect and configure your ESP32-CAM module.
-2. **Model Training:** Train your CNN model with custom hand gesture datasets.
-3. **Deployment:** Deploy the model and integrate with the web dashboard.
-4. **Enjoy!** Start recognizing hand gestures in real-time.
+---
+
+## 2. Flash ESP32-CAM Firmware (MJPEG Stream)
+
+**Step 1: Arduino Setup**
+- Open Arduino IDE
+- File > Preferences, paste in "Additional Board URLs":
+  ```
+  https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+  ```
+- Tools > Board > Boards Manager, search and install **esp32**
+
+**Step 2: Hardware Wiring**
+
+| ESP32-CAM | FTDI Adapter    |
+| --------- | --------------- |
+| GND       | GND             |
+| 5V        | 5V              |
+| U0R (RX)  | TX              |
+| U0T (TX)  | RX              |
+| IO0       | GND (boot mode) |
+
+- Press **RESET** or **EN** to restart ESP32 in flashing mode.
+
+**Step 3: Upload Firmware**
+- Open `esp32_cam.ino` (`demo_project/firmware`)
+- Edit Wi-Fi credentials:
+  ```cpp
+  const char* ssid = "YourWiFi";
+  const char* password = "YourPassword";
+  ```
+- Set Tools:
+    - Board: ESP32 Wrover Module
+    - Flash Frequency: 40 MHz
+    - Partition Scheme: Huge APP
+    - Upload Speed: 115200
+- Click **Upload**
+- Disconnect IO0 from GND, **press RESET**
+
+**Step 4: Get IP Address**
+- Open Serial Monitor (115200 baud)
+- Note the IP address (e.g. `http://192.168.1.107`)
+
+---
+
+## 3. Prepare AI Server
+
+**Step 1: Setup Python Environment**
+```bash
+cd demo_project/server
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+**Step 2: Add Model**
+- Place trained gesture model (`action.h5`) in `server/`
+- Ensure it's trained on 30 frames × 1662 keypoints (see `run.py`)
+
+**Step 3: Run Optimized Server**
+```bash
+python optimized_server.py
+```
+
+---
+
+## 4. Access Video and Results
+
+**Step 1: Start Web Interface**
+- Open in browser:  
+  `demo_project/web/index.html`
+
+**Step 2: Watch the System Work**
+- Video from ESP32-CAM streams on screen
+- Every second:
+    - Extracts hand/pose/face keypoints
+    - Runs AI inference
+    - Displays detected gesture (e.g., “Xin chào”)
+
+---
+
+## 5. Common Troubleshooting
+
+| Issue                            | Solution                                                      |
+| -------------------------------- | ------------------------------------------------------------- |
+| ESP32 doesn’t appear on COM port | Check USB cable, drivers, FTDI jumper wiring                  |
+| MJPEG stream not showing         | Check IP, open `http://<ip>:81/stream` in browser             |
+| No predictions                   | Make sure `action.h5` is compatible and in correct location   |
+| Delay in video                   | Use LAN instead of Wi-Fi for testing                          |
+| High latency                     | Lower frame size or switch to WebRTC (advanced)               |
+
+---
+
+## 6. Next Steps / Ideas
+
+- Add more gestures to `action.h5`
+- Build a mobile app to access the server
+- Replace MJPEG with WebRTC for low latency
+- Display 3D avatar to visualize hand signs
+- Connect to Text-to-Speech for live communication aid
+
+---
 
 ## 🙏 Special Thanks
 
-- Special thanks to **Mr. Phương** for guidance and support throughout this project.
+Special thanks to **Mr. Phương** for valuable guidance and support.
+
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
 > “Technology is best when it brings people together.”  
 > *— Matt Mullenweg*
+
+---
+
+**HandTalk-AI** is open for collaboration and contributions!  
+Feel free to fork, star, and share to advance AI for the community.
